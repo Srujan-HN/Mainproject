@@ -49,7 +49,7 @@ public class FileService {
 
     public String uploadFile(MultipartFile file, String email) throws IOException {
         if (file.isEmpty()) throw new RuntimeException("File is empty");
-        if (file.getSize() > 5 * 1024 * 1024) throw new RuntimeException("File size exceeds 5MB");
+        if (file.getSize() > 50L * 1024 * 1024) throw new RuntimeException("File size exceeds 50MB");
 
         ensureUploadDir();
 

@@ -23,14 +23,22 @@ export default function UploadModal({ onClose, onSuccess, editId = null }) {
   const handleDrop = (e) => {
     e.preventDefault(); setDragging(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped) setFile(dropped);
+    if (dropped) validateAndSetFile(dropped);
   };
 
   const formatSize = (bytes) => bytes < 1024 * 1024
     ? `${(bytes / 1024).toFixed(1)} KB`
     : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
-  const handleFileChange = useCallback(e => setFile(e.target.files[0]), []);
+  const MAX_SIZE = 50 * 1024 * 1024;
+
+  const validateAndSetFile = (f) => {
+    if (f && f.size > MAX_SIZE) { setError('File size exceeds 50MB'); return; }
+    setError('');
+    setFile(f);
+  };
+
+  const handleFileChange = useCallback(e => validateAndSetFile(e.target.files[0]), []);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 px-4"
@@ -50,7 +58,7 @@ export default function UploadModal({ onClose, onSuccess, editId = null }) {
               <h2 className="text-lg font-extrabold text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>
                 {editId ? 'Update File' : 'Upload File'}
               </h2>
-              <p className="text-xs text-blue-200/40">Max file size: 5MB</p>
+              <p className="text-xs text-blue-200/40">Max file size: 50MB</p>
             </div>
           </div>
           <button onClick={onClose}
