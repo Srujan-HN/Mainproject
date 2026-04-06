@@ -87,9 +87,12 @@ public class FileService {
         FileEntity file = fileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("File not found"));
         File target = new File(file.getFilePath()).getCanonicalFile();
-        if (!target.getCanonicalPath().startsWith(new File(uploadDir).getCanonicalPath())) {
+        String targetPath = target.getCanonicalPath();
+        String basePath = new File(uploadDir).getCanonicalPath();
+        if (!targetPath.toLowerCase().startsWith(basePath.toLowerCase())) {
             throw new SecurityException("Access to file outside upload directory is not allowed");
         }
+        if (!target.exists()) throw new RuntimeException("File not found on disk");
         return new UrlResource(target.toURI());
     }
 

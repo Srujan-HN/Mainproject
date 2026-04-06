@@ -15,7 +15,10 @@ const typeConfig = (type) => {
 
 const fetchWithAuth = async (url) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } });
-  if (!res.ok) throw new Error('File not found or access denied');
+  if (!res.ok) {
+    const msg = await res.text().catch(() => '');
+    throw new Error(msg || `Request failed (${res.status})`);
+  }
   return res;
 };
 
@@ -32,19 +35,26 @@ export default function FileCard({ file, userEmail, userRole, onEdit, onDeleted,
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = displayName; a.click();
-      URL.revokeObjectURL(url);
+      a.href = url; a.download = displayName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (e) { onError && onError(e.message); }
   }, [file.id, displayName, onError]);
 
   const handlePreview = useCallback(async () => {
+    const win = window.open('', '_blank');
     try {
       const res = await fetchWithAuth(`/files/preview/${file.id}`);
       const contentType = res.headers.get('Content-Type') || file.fileType || 'application/octet-stream';
       const blob = await res.blob();
       const url = URL.createObjectURL(new Blob([blob], { type: contentType }));
-      window.open(url, '_blank');
-    } catch (e) { onError && onError(e.message); }
+      win.location.href = url;
+    } catch (e) {
+      win && win.close();
+      onError && onError(e.message);
+    }
   }, [file.id, file.fileType, onError]);
 
   const handleDelete = useCallback(async () => {
